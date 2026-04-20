@@ -37,11 +37,10 @@ class BrewBubblesTempUnitSelect(
         client: BrewBubblesClient,
         coordinator: BrewBubblesCoordinator,
     ) -> None:
-        CoordinatorEntity.__init__(self, coordinator)
+        super().__init__(coordinator)
         self._entry = entry
         self._client = client
-        hostname = entry.data.get("hostname", entry.data["host"])
-        self._attr_unique_id = f"{hostname}_temp_unit"
+        self._attr_unique_id = f"{self._hostname}_temp_unit"
 
     @property
     def current_option(self) -> str | None:

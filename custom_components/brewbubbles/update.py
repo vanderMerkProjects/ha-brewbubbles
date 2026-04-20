@@ -41,11 +41,10 @@ class BrewBubblesFirmwareUpdate(
         client: BrewBubblesClient,
         coordinator: BrewBubblesVersionCoordinator,
     ) -> None:
-        CoordinatorEntity.__init__(self, coordinator)
+        super().__init__(coordinator)
         self._entry = entry
         self._client = client
-        hostname = entry.data.get("hostname", entry.data["host"])
-        self._attr_unique_id = f"{hostname}_firmware_update"
+        self._attr_unique_id = f"{self._hostname}_firmware_update"
 
     @property
     def installed_version(self) -> str | None:

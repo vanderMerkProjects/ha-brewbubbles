@@ -13,10 +13,13 @@ class BrewBubblesEntity:
     _entry: ConfigEntry
 
     @property
+    def _hostname(self) -> str:
+        return self._entry.data.get("hostname", self._entry.data["host"])
+
+    @property
     def device_info(self) -> DeviceInfo:
-        hostname = self._entry.data.get("hostname", self._entry.data["host"])
         return DeviceInfo(
-            identifiers={(DOMAIN, hostname)},
+            identifiers={(DOMAIN, self._hostname)},
             manufacturer="Brew Bubbles",
             configuration_url=f"http://{self._entry.data['host']}",
         )

@@ -2,12 +2,13 @@ from __future__ import annotations
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntry
 
 from .const import DOMAIN
 
 
 async def async_get_device_diagnostics(
-    hass: HomeAssistant, entry: ConfigEntry, device
+    hass: HomeAssistant, entry: ConfigEntry, device: DeviceEntry | None
 ) -> dict:
     data = hass.data[DOMAIN][entry.entry_id]
     coordinator = data["coordinator"]

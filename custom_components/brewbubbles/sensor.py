@@ -61,11 +61,10 @@ class BrewBubblesSensor(BrewBubblesEntity, CoordinatorEntity[BrewBubblesCoordina
         entry: ConfigEntry,
         description: SensorEntityDescription,
     ) -> None:
-        CoordinatorEntity.__init__(self, coordinator)
+        super().__init__(coordinator)
         self._entry = entry
         self.entity_description = description
-        hostname = entry.data.get("hostname", entry.data["host"])
-        self._attr_unique_id = f"{hostname}_{description.key}"
+        self._attr_unique_id = f"{self._hostname}_{description.key}"
 
     @property
     def native_value(self) -> float | None:
