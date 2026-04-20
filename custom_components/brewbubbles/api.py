@@ -24,6 +24,10 @@ class BrewBubblesClient:
         self._session = session
         self._host = host.rstrip("/")
 
+    @property
+    def host(self) -> str:
+        return self._host
+
     def _url(self, path: str) -> str:
         path = path if path.startswith("/") else f"/{path}"
         return f"http://{self._host}{path}"

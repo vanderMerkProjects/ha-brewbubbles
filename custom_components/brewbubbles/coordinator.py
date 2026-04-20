@@ -25,7 +25,7 @@ class BrewBubblesCoordinator(DataUpdateCoordinator[dict]):
         self.client = client
 
     async def _async_update_data(self) -> dict:
-        _LOGGER.debug("Fetching bubble data from %s", self.client._host)
+        _LOGGER.debug("Fetching bubble data from %s", self.client.host)
         try:
             data = await self.client.get_bubble()
         except BrewBubblesApiError as err:
@@ -45,7 +45,7 @@ class BrewBubblesVersionCoordinator(DataUpdateCoordinator[dict]):
         self.client = client
 
     async def _async_update_data(self) -> dict:
-        _LOGGER.debug("Fetching version info from %s", self.client._host)
+        _LOGGER.debug("Fetching version info from %s", self.client.host)
         try:
             this_v = await self.client.get_this_version()
         except BrewBubblesApiError as err:
