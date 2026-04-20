@@ -7,7 +7,7 @@ from homeassistant.helpers.redact import async_redact_data
 
 from .const import DOMAIN
 
-_TO_REDACT = {"host", "hostname"}
+_TO_REDACT = {"host", "hostname", "title"}
 
 
 async def async_get_device_diagnostics(
