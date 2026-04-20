@@ -9,24 +9,29 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .api import BrewBubblesClient
 from .const import DOMAIN
 from .coordinator import BrewBubblesVersionCoordinator
+from .entity import BrewBubblesEntity
+
 
 def _ver_str(v: dict | None) -> str | None:
     if not isinstance(v, dict):
         return None
     return v.get("version")
 
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    client: BrewBubblesClient = hass.data[DOMAIN][entry.entry_id]["client"]
-    vcoord: BrewBubblesVersionCoordinator = hass.data[DOMAIN][entry.entry_id]["version_coordinator"]
+    data = hass.data[DOMAIN][entry.entry_id]
+    client: BrewBubblesClient = data["client"]
+    vcoord: BrewBubblesVersionCoordinator = data["version_coordinator"]
     async_add_entities([BrewBubblesFirmwareUpdate(entry, client, vcoord)])
 
 
-class BrewBubblesFirmwareUpdate(CoordinatorEntity[BrewBubblesVersionCoordinator], UpdateEntity):
-    _attr_has_entity_name = True
+class BrewBubblesFirmwareUpdate(
+    BrewBubblesEntity, CoordinatorEntity[BrewBubblesVersionCoordinator], UpdateEntity
+):
     _attr_name = "Firmware"
     _attr_title = "Brew Bubbles Firmware"
 
@@ -39,8 +44,7 @@ class BrewBubblesFirmwareUpdate(CoordinatorEntity[BrewBubblesVersionCoordinator]
         super().__init__(coordinator)
         self._entry = entry
         self._client = client
-        hostname = entry.data.get("hostname", entry.data["host"])
-        self._attr_unique_id = f"{hostname}_firmware_update"
+        self._attr_unique_id = f"{self._hostname}_firmware_update"
 
     @property
     def installed_version(self) -> str | None:
@@ -59,10 +63,4 @@ class BrewBubblesFirmwareUpdate(CoordinatorEntity[BrewBubblesVersionCoordinator]
         return bool(iv and lv and iv != lv)
 
     async def async_install(self, version: str | None, backup: bool, **kwargs) -> None:
-        # Trigger device OTA; Brew Bubbles handles download + flash
         await self._client.start_ota()
-
-    @property
-    def device_info(self):
-        hostname = self._entry.data.get("hostname", self._entry.data["host"])
-        return {"identifiers": {(DOMAIN, hostname)}}

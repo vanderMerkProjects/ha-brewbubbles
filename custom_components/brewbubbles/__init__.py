@@ -11,6 +11,7 @@ from .coordinator import BrewBubblesCoordinator, BrewBubblesVersionCoordinator
 
 PLATFORMS = ["sensor", "update", "select"]
 
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     session = async_get_clientsession(hass)
     client = BrewBubblesClient(session, entry.data["host"])
@@ -27,12 +28,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "version_coordinator": version_coordinator,
     }
 
-    # Register device with a stable identifier (hostname), but a friendly name (fermenter name)
     hostname = entry.data.get("hostname", entry.data["host"])
-
     bubble_data = coordinator.data or {}
     vessel_name = bubble_data.get("name") or entry.title or hostname
-
     version_data = version_coordinator.data or {}
     this_version = (version_data.get("this") or {}).get("version")
 
@@ -41,6 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, hostname)},
         name=vessel_name,
+        manufacturer="Brew Bubbles",
         sw_version=this_version,
         configuration_url=f"http://{entry.data['host']}",
     )
@@ -48,8 +47,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
+
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id, None)
     return unload_ok
+
+
+async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    if await async_unload_entry(hass, entry):
+        await async_setup_entry(hass, entry)

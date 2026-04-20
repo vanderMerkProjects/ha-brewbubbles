@@ -8,13 +8,13 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTemperature
-from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import BrewBubblesCoordinator
+from .entity import BrewBubblesEntity
 
 
 SENSORS: tuple[SensorEntityDescription, ...] = (
@@ -53,8 +53,7 @@ async def async_setup_entry(
     )
 
 
-class BrewBubblesSensor(CoordinatorEntity[BrewBubblesCoordinator], SensorEntity):
-    _attr_has_entity_name = True
+class BrewBubblesSensor(BrewBubblesEntity, CoordinatorEntity[BrewBubblesCoordinator], SensorEntity):
 
     def __init__(
         self,
@@ -63,44 +62,30 @@ class BrewBubblesSensor(CoordinatorEntity[BrewBubblesCoordinator], SensorEntity)
         description: SensorEntityDescription,
     ) -> None:
         super().__init__(coordinator)
-        self.entity_description = description
         self._entry = entry
-
-        hostname = entry.data.get("hostname", entry.data["host"])
-        self._attr_unique_id = f"{hostname}_{description.key}"
+        self.entity_description = description
+        self._attr_unique_id = f"{self._hostname}_{description.key}"
 
     @property
-    def native_value(self):
+    def native_value(self) -> float | None:
         data = self.coordinator.data or {}
         key = self.entity_description.key
         val = data.get(key)
 
-        if key == "bpm":
-            val = data.get("bpm")
-            if val is None:
-                return None
-            try:
-                return float(val)
-            except (TypeError, ValueError):
-                return None
+        if val is None:
+            return None
+        try:
+            fval = float(val)
+        except (TypeError, ValueError):
+            return None
 
-        if key in ("temp", "ambient"):
-            if val is None:
-                return None
-            try:
-                fval = float(val)
-            except (TypeError, ValueError):
-                return None
+        if key in ("temp", "ambient") and fval <= -127:
+            return None
 
-            if fval <= -127:
-                return None
-
-            return fval
-        
-        return data.get(key)
+        return fval
 
     @property
-    def native_unit_of_measurement(self):
+    def native_unit_of_measurement(self) -> str | None:
         key = self.entity_description.key
 
         if key == "bpm":
@@ -108,18 +93,6 @@ class BrewBubblesSensor(CoordinatorEntity[BrewBubblesCoordinator], SensorEntity)
 
         if key in ("temp", "ambient"):
             unit = (self.coordinator.data or {}).get("temp_unit")
-            if unit == "F":
-                return UnitOfTemperature.FAHRENHEIT
-            return UnitOfTemperature.CELSIUS
+            return UnitOfTemperature.FAHRENHEIT if unit == "F" else UnitOfTemperature.CELSIUS
 
         return None
-
-    @property
-    def device_info(self):
-        hostname = self._entry.data.get("hostname", self._entry.data["host"])
-        return {
-            "identifiers": {(DOMAIN, hostname)},
-            "name": f"Brew Bubbles ({hostname})",
-            "manufacturer": "Brew Bubbles",
-            "configuration_url": f"http://{self._entry.data['host']}",
-        }

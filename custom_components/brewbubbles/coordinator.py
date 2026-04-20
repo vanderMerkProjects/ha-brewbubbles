@@ -13,6 +13,7 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=60)
 VERSION_SCAN_INTERVAL = timedelta(hours=6)
 
+
 class BrewBubblesCoordinator(DataUpdateCoordinator[dict]):
     def __init__(self, hass: HomeAssistant, client: BrewBubblesClient) -> None:
         super().__init__(
@@ -24,10 +25,14 @@ class BrewBubblesCoordinator(DataUpdateCoordinator[dict]):
         self.client = client
 
     async def _async_update_data(self) -> dict:
+        _LOGGER.debug("Fetching bubble data from %s", self.client.host)
         try:
-            return await self.client.get_bubble()
+            data = await self.client.get_bubble()
         except BrewBubblesApiError as err:
             raise UpdateFailed(str(err)) from err
+        _LOGGER.debug("Bubble data received: bpm=%s temp=%s", data.get("bpm"), data.get("temp"))
+        return data
+
 
 class BrewBubblesVersionCoordinator(DataUpdateCoordinator[dict]):
     def __init__(self, hass: HomeAssistant, client: BrewBubblesClient) -> None:
@@ -40,9 +45,7 @@ class BrewBubblesVersionCoordinator(DataUpdateCoordinator[dict]):
         self.client = client
 
     async def _async_update_data(self) -> dict:
-        this_v = None
-        that_v = None
-
+        _LOGGER.debug("Fetching version info from %s", self.client.host)
         try:
             this_v = await self.client.get_this_version()
         except BrewBubblesApiError as err:
@@ -51,7 +54,8 @@ class BrewBubblesVersionCoordinator(DataUpdateCoordinator[dict]):
         try:
             that_v = await self.client.get_that_version()
         except BrewBubblesApiError:
-            # No internet / blocked; keep installed_version working
+            _LOGGER.debug("Could not fetch latest version (no internet?); skipping update check")
             that_v = None
 
+        _LOGGER.debug("Version info: installed=%s latest=%s", this_v.get("version"), that_v and that_v.get("version"))
         return {"this": this_v, "that": that_v}

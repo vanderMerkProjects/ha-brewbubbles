@@ -5,52 +5,52 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .api import BrewBubblesClient
-from .const import DOMAIN
+from .const import DOMAIN, TEMP_C, TEMP_F
+from .coordinator import BrewBubblesCoordinator
+from .entity import BrewBubblesEntity
 
-OPT_C = "celsius"
-OPT_F = "fahrenheit"
 
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    client: BrewBubblesClient = hass.data[DOMAIN][entry.entry_id]["client"]
-    async_add_entities([BrewBubblesTempUnitSelect(entry, client)])
+    data = hass.data[DOMAIN][entry.entry_id]
+    client: BrewBubblesClient = data["client"]
+    coordinator: BrewBubblesCoordinator = data["coordinator"]
+    async_add_entities([BrewBubblesTempUnitSelect(entry, client, coordinator)])
 
 
-class BrewBubblesTempUnitSelect(SelectEntity):
-    _attr_has_entity_name = True
+class BrewBubblesTempUnitSelect(
+    BrewBubblesEntity, CoordinatorEntity[BrewBubblesCoordinator], SelectEntity
+):
     _attr_name = "Temperature Unit"
-    _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _attr_options = [OPT_C, OPT_F]
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_options = [TEMP_C, TEMP_F]
 
-    def __init__(self, entry: ConfigEntry, client: BrewBubblesClient) -> None:
+    def __init__(
+        self,
+        entry: ConfigEntry,
+        client: BrewBubblesClient,
+        coordinator: BrewBubblesCoordinator,
+    ) -> None:
+        super().__init__(coordinator)
         self._entry = entry
         self._client = client
-        hostname = entry.data.get("hostname", entry.data["host"])
-        self._attr_unique_id = f"{hostname}_temp_unit"
+        self._attr_unique_id = f"{self._hostname}_temp_unit"
 
     @property
     def current_option(self) -> str | None:
-        # Use the latest polled unit from /bubble/
-        unit = (self.hass.data[DOMAIN][self._entry.entry_id]["coordinator"].data or {}).get("temp_unit")
+        unit = (self.coordinator.data or {}).get("temp_unit")
         if unit == "F":
-            return OPT_F
+            return TEMP_F
         if unit == "C":
-            return OPT_C
+            return TEMP_C
         return None
 
     async def async_select_option(self, option: str) -> None:
         await self._client.set_temp_unit(option)
-
-        # refresh bubble coordinator so unit updates in HA quickly
-        coord = self.hass.data[DOMAIN][self._entry.entry_id]["coordinator"]
-        await coord.async_request_refresh()
-
-    @property
-    def device_info(self):
-        hostname = self._entry.data.get("hostname", self._entry.data["host"])
-        return {"identifiers": {(DOMAIN, hostname)}}
+        await self.coordinator.async_request_refresh()
