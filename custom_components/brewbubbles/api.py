@@ -1,13 +1,19 @@
 from __future__ import annotations
 
-import async_timeout
+import asyncio
+import json
+
+import aiohttp
 from aiohttp import ClientSession
+
 
 class BrewBubblesApiError(Exception):
     """Base error."""
 
+
 class BrewBubblesCannotConnect(BrewBubblesApiError):
     """Connection error."""
+
 
 class BrewBubblesInvalidResponse(BrewBubblesApiError):
     """Unexpected response / not a Brew Bubbles device."""
@@ -31,19 +37,6 @@ class BrewBubblesClient:
     async def get_this_version(self) -> dict:
         return await self._get_json("/thisVersion/")
 
-    async def _get_json(self, path: str) -> dict:
-        try:
-            async with async_timeout.timeout(10):
-                resp = await self._session.get(self._url(path))
-            resp.raise_for_status()
-            data = await resp.json(content_type=None)
-        except Exception as err:
-            raise BrewBubblesCannotConnect(str(err)) from err
-
-        if not isinstance(data, dict):
-            raise BrewBubblesInvalidResponse("Expected JSON object")
-        return data
-
     async def get_that_version(self) -> dict:
         return await self._get_json("/thatVersion/")
 
@@ -53,18 +46,39 @@ class BrewBubblesClient:
     async def set_temp_unit(self, unit: str) -> None:
         await self._post_form("/settings/temperature/", {"tempformat": unit})
 
-    async def _get_ok(self, path: str) -> None:
+    async def _get_json(self, path: str) -> dict:
         try:
-            async with async_timeout.timeout(10):
+            async with asyncio.timeout(10):
                 resp = await self._session.get(self._url(path))
             resp.raise_for_status()
-        except Exception as err:
+            data = await resp.json(content_type=None)
+        except asyncio.TimeoutError as err:
+            raise BrewBubblesCannotConnect("Timeout connecting to device") from err
+        except aiohttp.ClientError as err:
+            raise BrewBubblesCannotConnect(str(err)) from err
+        except json.JSONDecodeError as err:
+            raise BrewBubblesInvalidResponse("Invalid JSON response") from err
+
+        if not isinstance(data, dict):
+            raise BrewBubblesInvalidResponse("Expected JSON object")
+        return data
+
+    async def _get_ok(self, path: str) -> None:
+        try:
+            async with asyncio.timeout(10):
+                resp = await self._session.get(self._url(path))
+            resp.raise_for_status()
+        except asyncio.TimeoutError as err:
+            raise BrewBubblesCannotConnect("Timeout connecting to device") from err
+        except aiohttp.ClientError as err:
             raise BrewBubblesCannotConnect(str(err)) from err
 
     async def _post_form(self, path: str, payload: dict) -> None:
         try:
-            async with async_timeout.timeout(10):
+            async with asyncio.timeout(10):
                 resp = await self._session.post(self._url(path), data=payload)
             resp.raise_for_status()
-        except Exception as err:
+        except asyncio.TimeoutError as err:
+            raise BrewBubblesCannotConnect("Timeout connecting to device") from err
+        except aiohttp.ClientError as err:
             raise BrewBubblesCannotConnect(str(err)) from err
