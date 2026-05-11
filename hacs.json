@@ -1,4 +1,6 @@
 {
   "name": "Brew Bubbles",
-  "homeassistant": "2024.6.0"
+  "homeassistant": "2024.6.0",
+  "filename": "custom_components/brewbubbles/manifest.json",
+  "render_readme": true
 }

@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 from homeassistant.components.sensor import (
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
-    SensorDeviceClass,
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -12,15 +12,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
 from .coordinator import BrewBubblesCoordinator
 from .entity import BrewBubblesEntity
-
 
 SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="bpm",
         name="Bubbles per Minute",
+        icon="mdi:chart-bubble",
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
     ),
@@ -46,15 +45,13 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    coordinator: BrewBubblesCoordinator = hass.data[DOMAIN][entry.entry_id]["coordinator"]
-    async_add_entities(
-        BrewBubblesSensor(coordinator, entry, desc)
-        for desc in SENSORS
-    )
+    coordinator: BrewBubblesCoordinator = entry.runtime_data.coordinator
+    async_add_entities(BrewBubblesSensor(coordinator, entry, desc) for desc in SENSORS)
 
 
-class BrewBubblesSensor(BrewBubblesEntity, CoordinatorEntity[BrewBubblesCoordinator], SensorEntity):
-
+class BrewBubblesSensor(
+    BrewBubblesEntity, CoordinatorEntity[BrewBubblesCoordinator], SensorEntity
+):
     def __init__(
         self,
         coordinator: BrewBubblesCoordinator,

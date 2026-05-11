@@ -1,18 +1,30 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .api import BrewBubblesClient
-from .const import DOMAIN
+from .const import CONF_HOSTNAME, DOMAIN
 from .coordinator import BrewBubblesCoordinator, BrewBubblesVersionCoordinator
 
 PLATFORMS = ["sensor", "update", "select"]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+@dataclass
+class BrewBubblesData:
+    client: BrewBubblesClient
+    coordinator: BrewBubblesCoordinator
+    version_coordinator: BrewBubblesVersionCoordinator
+
+
+type BrewBubblesConfigEntry = ConfigEntry[BrewBubblesData]
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: BrewBubblesConfigEntry) -> bool:
     session = async_get_clientsession(hass)
     client = BrewBubblesClient(session, entry.data["host"])
 
@@ -22,13 +34,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     version_coordinator = BrewBubblesVersionCoordinator(hass, client)
     await version_coordinator.async_config_entry_first_refresh()
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
-        "client": client,
-        "coordinator": coordinator,
-        "version_coordinator": version_coordinator,
-    }
+    entry.runtime_data = BrewBubblesData(
+        client=client,
+        coordinator=coordinator,
+        version_coordinator=version_coordinator,
+    )
 
-    hostname = entry.data.get("hostname", entry.data["host"])
+    hostname = entry.data.get(CONF_HOSTNAME, entry.data["host"])
     bubble_data = coordinator.data or {}
     vessel_name = bubble_data.get("name") or entry.title or hostname
     version_data = version_coordinator.data or {}
@@ -48,13 +60,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id, None)
-    return unload_ok
+async def async_unload_entry(hass: HomeAssistant, entry: BrewBubblesConfigEntry) -> bool:
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_reload_entry(hass: HomeAssistant, entry: BrewBubblesConfigEntry) -> None:
     if await async_unload_entry(hass, entry):
         await async_setup_entry(hass, entry)

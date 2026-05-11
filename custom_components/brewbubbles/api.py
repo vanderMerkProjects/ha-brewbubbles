@@ -6,6 +6,10 @@ import json
 import aiohttp
 from aiohttp import ClientSession
 
+from .const import REQUEST_TIMEOUT, TEMP_C, TEMP_F
+
+_VALID_TEMP_UNITS = {TEMP_C, TEMP_F}
+
 
 class BrewBubblesApiError(Exception):
     """Base error."""
@@ -48,11 +52,13 @@ class BrewBubblesClient:
         await self._get_ok("/otastart/")
 
     async def set_temp_unit(self, unit: str) -> None:
+        if unit not in _VALID_TEMP_UNITS:
+            raise ValueError(f"Invalid temperature unit: {unit!r}")
         await self._post_form("/settings/temperature/", {"tempformat": unit})
 
     async def _get_json(self, path: str) -> dict:
         try:
-            async with asyncio.timeout(10):
+            async with asyncio.timeout(REQUEST_TIMEOUT):
                 async with self._session.get(self._url(path)) as resp:
                     resp.raise_for_status()
                     data = await resp.json(content_type=None)
@@ -69,7 +75,7 @@ class BrewBubblesClient:
 
     async def _get_ok(self, path: str) -> None:
         try:
-            async with asyncio.timeout(10):
+            async with asyncio.timeout(REQUEST_TIMEOUT):
                 async with self._session.get(self._url(path)) as resp:
                     resp.raise_for_status()
         except asyncio.TimeoutError as err:
@@ -79,7 +85,7 @@ class BrewBubblesClient:
 
     async def _post_form(self, path: str, payload: dict) -> None:
         try:
-            async with asyncio.timeout(10):
+            async with asyncio.timeout(REQUEST_TIMEOUT):
                 async with self._session.post(self._url(path), data=payload) as resp:
                     resp.raise_for_status()
         except asyncio.TimeoutError as err:
