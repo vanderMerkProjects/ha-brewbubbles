@@ -2,11 +2,8 @@ from __future__ import annotations
 
 from datetime import timedelta
 
-from homeassistant.const import CONF_HOST
-
 DOMAIN = "brewbubbles"
 
-CONF_HOST = CONF_HOST  # re-export for convenience
 CONF_HOSTNAME = "hostname"
 
 TEMP_C = "celsius"
