@@ -90,6 +90,10 @@ class BrewBubblesSensor(
 
         if key in ("temp", "ambient"):
             unit = (self.coordinator.data or {}).get("temp_unit")
-            return UnitOfTemperature.FAHRENHEIT if unit == "F" else UnitOfTemperature.CELSIUS
+            return (
+                UnitOfTemperature.FAHRENHEIT
+                if unit == "F"
+                else UnitOfTemperature.CELSIUS
+            )
 
         return None

@@ -15,7 +15,7 @@ def _sanitize_host(raw: str) -> str:
     host = raw.strip()
     for prefix in ("https://", "http://"):
         if host.startswith(prefix):
-            host = host[len(prefix):]
+            host = host[len(prefix) :]
     return host.rstrip("/")
 
 
@@ -75,9 +75,7 @@ class BrewBubblesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def _validate_and_connect(
-        self, host: str, errors: dict[str, str]
-    ):
+    async def _validate_and_connect(self, host: str, errors: dict[str, str]):
         session = async_get_clientsession(self.hass)
         client = BrewBubblesClient(session, host)
 
