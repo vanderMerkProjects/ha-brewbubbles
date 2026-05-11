@@ -8,7 +8,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .api import BrewBubblesClient
-from .const import DOMAIN, TEMP_C, TEMP_F
+from .const import TEMP_C, TEMP_F
 from .coordinator import BrewBubblesCoordinator
 from .entity import BrewBubblesEntity
 
@@ -18,10 +18,15 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    data = hass.data[DOMAIN][entry.entry_id]
-    client: BrewBubblesClient = data["client"]
-    coordinator: BrewBubblesCoordinator = data["coordinator"]
-    async_add_entities([BrewBubblesTempUnitSelect(entry, client, coordinator)])
+    async_add_entities(
+        [
+            BrewBubblesTempUnitSelect(
+                entry,
+                entry.runtime_data.client,
+                entry.runtime_data.coordinator,
+            )
+        ]
+    )
 
 
 class BrewBubblesTempUnitSelect(
@@ -30,6 +35,7 @@ class BrewBubblesTempUnitSelect(
     _attr_name = "Temperature Unit"
     _attr_entity_category = EntityCategory.CONFIG
     _attr_options = [TEMP_C, TEMP_F]
+    _attr_translation_key = "temp_unit"
 
     def __init__(
         self,

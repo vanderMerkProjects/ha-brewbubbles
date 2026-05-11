@@ -6,16 +6,41 @@
         "description": "Enter the hostname or IP address of your Brew Bubbles device.",
         "data": {
           "host": "Host"
+        },
+        "data_description": {
+          "host": "IP address or hostname, e.g. 192.168.1.50 or brewbubbles.local"
+        }
+      },
+      "reconfigure": {
+        "title": "Reconfigure Brew Bubbles",
+        "description": "Update the hostname or IP address of your Brew Bubbles device.",
+        "data": {
+          "host": "Host"
+        },
+        "data_description": {
+          "host": "IP address or hostname, e.g. 192.168.1.50 or brewbubbles.local"
         }
       }
     },
     "error": {
-      "cannot_connect": "Failed to connect.",
-      "invalid_response": "Device did not return expected Brew Bubbles response.",
-      "unknown": "Unexpected error."
+      "cannot_connect": "Failed to connect to the device. Check the address and try again.",
+      "invalid_response": "Device did not return an expected Brew Bubbles response.",
+      "unknown": "An unexpected error occurred. Check the Home Assistant logs for details."
     },
     "abort": {
-      "already_configured": "Device is already configured."
+      "already_configured": "This device is already configured.",
+      "reconfigure_successful": "Device address updated successfully.",
+      "unique_id_mismatch": "The address you entered belongs to a different Brew Bubbles device. To add it, use Add Integration instead."
+    }
+  },
+  "entity": {
+    "select": {
+      "temp_unit": {
+        "state": {
+          "celsius": "Celsius",
+          "fahrenheit": "Fahrenheit"
+        }
+      }
     }
   }
 }

@@ -1,10 +1,10 @@
 {
   "domain": "brewbubbles",
   "name": "Brew Bubbles",
-  "codeowners": ["@Andriesmeze"],
+  "codeowners": ["@vandermerkprojects"],
   "config_flow": true,
-  "documentation": "https://github.com/Andriesmeze/ha-brewbubbles",
+  "documentation": "https://github.com/vandermerkprojects/ha-brewbubbles",
   "iot_class": "local_polling",
-  "issue_tracker": "https://github.com/Andriesmeze/ha-brewbubbles/issues",
-  "version": "0.1.0"
+  "issue_tracker": "https://github.com/vandermerkprojects/ha-brewbubbles/issues",
+  "version": "0.2.0"
 }

@@ -1,17 +1,14 @@
 from __future__ import annotations
 
-from datetime import timedelta
 import logging
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .api import BrewBubblesClient, BrewBubblesApiError
+from .api import BrewBubblesApiError, BrewBubblesClient
+from .const import DEFAULT_SCAN_INTERVAL, VERSION_SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
-
-DEFAULT_SCAN_INTERVAL = timedelta(seconds=60)
-VERSION_SCAN_INTERVAL = timedelta(hours=6)
 
 
 class BrewBubblesCoordinator(DataUpdateCoordinator[dict]):
@@ -30,7 +27,11 @@ class BrewBubblesCoordinator(DataUpdateCoordinator[dict]):
             data = await self.client.get_bubble()
         except BrewBubblesApiError as err:
             raise UpdateFailed(str(err)) from err
-        _LOGGER.debug("Bubble data received: bpm=%s temp=%s", data.get("bpm"), data.get("temp"))
+        _LOGGER.debug(
+            "Bubble data received: bpm=%s temp=%s",
+            data.get("bpm"),
+            data.get("temp"),
+        )
         return data
 
 
@@ -54,8 +55,14 @@ class BrewBubblesVersionCoordinator(DataUpdateCoordinator[dict]):
         try:
             that_v = await self.client.get_that_version()
         except BrewBubblesApiError:
-            _LOGGER.debug("Could not fetch latest version (no internet?); skipping update check")
+            _LOGGER.debug(
+                "Could not fetch latest version (no internet?); skipping update check"
+            )
             that_v = None
 
-        _LOGGER.debug("Version info: installed=%s latest=%s", this_v.get("version"), that_v and that_v.get("version"))
+        _LOGGER.debug(
+            "Version info: installed=%s latest=%s",
+            this_v.get("version"),
+            that_v and that_v.get("version"),
+        )
         return {"this": this_v, "that": that_v}

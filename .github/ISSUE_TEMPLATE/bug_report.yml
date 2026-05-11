@@ -1,0 +1,66 @@
+name: Bug report
+description: Something isn't working as expected
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before opening a bug report, please check that no existing issue covers the same problem.
+
+  - type: input
+    id: ha_version
+    attributes:
+      label: Home Assistant version
+      placeholder: "e.g. 2025.3.0"
+    validations:
+      required: true
+
+  - type: input
+    id: integration_version
+    attributes:
+      label: Integration version
+      description: Shown in Settings → Devices & Services → Brew Bubbles → ⋮ → Integration info
+      placeholder: "e.g. 0.2.0"
+    validations:
+      required: true
+
+  - type: input
+    id: firmware_version
+    attributes:
+      label: Brew Bubbles firmware version
+      description: Shown on the device web UI or in the Firmware update entity
+      placeholder: "e.g. 1.0.7"
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Describe the bug
+      description: A clear description of what the bug is, including what you expected to happen.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Go to …
+        2. Click on …
+        3. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Diagnostics output
+      description: |
+        Download diagnostics from Settings → Devices & Services → Brew Bubbles → your device → Download Diagnostics and paste the contents here.
+      render: json
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log output
+      description: Enable debug logging for `custom_components.brewbubbles` and paste any relevant lines here.
+      render: text
