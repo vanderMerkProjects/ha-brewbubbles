@@ -29,7 +29,8 @@
     },
     "abort": {
       "already_configured": "This device is already configured.",
-      "reconfigure_successful": "Device address updated successfully."
+      "reconfigure_successful": "Device address updated successfully.",
+      "unique_id_mismatch": "The address you entered belongs to a different Brew Bubbles device. To add it, use Add Integration instead."
     }
   },
   "entity": {

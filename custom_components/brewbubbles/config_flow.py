@@ -57,6 +57,8 @@ class BrewBubblesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             if not errors:
                 hostname = (cfg.get("hostname") or host).lower()
+                await self.async_set_unique_id(hostname)
+                self._abort_if_unique_id_mismatch()
                 return self.async_update_reload_and_abort(
                     current_entry,
                     data_updates={"host": host, CONF_HOSTNAME: hostname},
